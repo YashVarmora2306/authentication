@@ -17,7 +17,7 @@ export const registerUserValidator = [
         .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*#?&])[0-9a-zA-Z@$!%*#?&]{6,}$/)
         .withMessage(
             "Password  must contain at least one uppercase letter, one lowercase letter, one special character and one digit"
-        ),
+    )
 ]
 
 export const loginUserValidator = [

@@ -30,6 +30,10 @@ User.init({
         type: DataTypes.STRING,
         allowNull: false,
     },
+    profilePicture: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
 }, {
     sequelize,
     modelName: "User",

@@ -1,22 +1,26 @@
 import User from "../models/User.js"
-import generateToken from "../helpers/generateToken.js"
+import { generateToken, handleUpload } from "../helpers/index.js";
 
 export const registerUser = async (req, res) => {
     const { username, email, password } = req.body;
+    const profilePicture = await handleUpload(req.file.buffer)
     try {
+        
         const userExists = await User.findOne({ email });
         if (userExists) return res.status(400).send("User already exists")
 
-        const user = await User.create({ username, email, password });
+        const user = await User.create({ username, email, password, profilePicture });
 
         const token = generateToken(user._id);
         res.status(201).send({
             _id: user._id,
             username: user.username,
             email: user.email,
+            profilePicture: user.profilePicture,
             token
         });
     } catch (error) {
+        console.log(error);
         res.status(500).send("Internal Server Error")
     }
 }
@@ -44,9 +48,16 @@ export const loginUser = async (req, res) => {
 }
 
 export const getProfile = (req, res) => {
-    res.status(200).send({
-        id: req.user._id,
-        username: req.user.username,
-        email: req.user.email,
-    });
+    const { _id, username, email, profilePicture } = req.user;
+    try {
+
+        res.status(200).send({
+            _id,
+            username,
+            email,
+            profilePicture,
+        });
+    } catch (error) {
+        res.status(500).send('Internal Server Error');
+    }
 }

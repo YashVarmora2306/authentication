@@ -4,9 +4,10 @@ import compression from "compression";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
+dotenv.config();
+
 import userRoutes from "./routes/index";
 
-dotenv.config();
 
 const app = express()
 

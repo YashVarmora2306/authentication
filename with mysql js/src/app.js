@@ -4,6 +4,7 @@ import compression from "compression";
 import morgan from "morgan";
 import cors from "cors";
 import userRoutes from "./routes/index.js"
+import {limiter} from "./middlewares/index.js";
 
 const app = express()
 
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/user', userRoutes);
+
+app.use('/user',limiter, userRoutes);
 
 export default app;

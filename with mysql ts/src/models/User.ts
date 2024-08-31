@@ -7,6 +7,7 @@ export interface IUser {
     username: string;
     email: string;
     password: string;
+    profilePicture: string;
 }
 
 class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> implements IUser {
@@ -14,6 +15,7 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> i
     declare username: string;
     declare email: string;
     declare password: string;
+    declare profilePicture: string;
 
     async matchPassword(enteredPassword: string): Promise<boolean> {
         return await bcrypt.compare(enteredPassword, this.password);
@@ -41,6 +43,10 @@ User.init({
     password: {
         type: DataTypes.STRING,
         allowNull: false,
+    },
+    profilePicture: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
 }, {
     sequelize,
