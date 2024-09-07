@@ -1,64 +1,67 @@
-import User from "../models/User";
-import { Request, Response } from "express";
-import {generateToken, handleUpload} from "../helpers";
+import { NextFunction, Request, Response } from "express";
+import { loginUserService, registerUserService, verifyEmailService } from "../services/auth";
+import CustomError from "../utils/CustomError";
 import { CustomRequest } from "../middlewares/auth";
 
-export const registerUser = async (req: Request, res: Response) => {
+
+export const registerUser = async (req: Request, res: Response, next:NextFunction) => {
     const { username, email, password } = req.body;
     try {
         if (!req.file) {
-            res.status(400).send("No profile picture uploaded");
-            return;
+            throw new CustomError("No profile picture uploaded", 400);
         }
-        const profilePicture = await handleUpload(req.file.buffer)
-        const userExists = await User.findOne({
-            email
-        });
-        if (userExists) return res.status(400).send("User already exists")
-        const user = await User.create({ username, email, password,profilePicture });
-        const token = generateToken(user._id.toString());
-        res.status(201).send({
-            _id: user._id,
-            username: user.username,
-            email: user.email,
-            profilePicture: user.profilePicture,
-            token
-        });
+        const user = await
+            registerUserService({ username, email, password, fileBuffer: req.file.buffer })
+        res.status(201).send(user);
+        
     } catch (error) {
-        res.status(400).send("Internal Server Error");
+        const customError = error as CustomError;
+        res.status(customError.statusCode || 500);
+        next(error)
     }
 }
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginUser = async (req: Request, res: Response, next:NextFunction) => {
     const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email });
-        const matchedPassword = await user?.matchPassword(password) ?? false
-        if (user && matchedPassword) {
-            const token = generateToken(user._id.toString());
-            res.status(200).send({
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                token
-            });
-        } else {
-            res.status(401).send("Invalid email or password");
-        }
-
+        const user = await loginUserService({ email, password });
+        res.status(200).send(user);
+        
     } catch (error) {
-        res.status(400).send("Internal Server Error");
+        const customError = error as CustomError;
+        res.status(customError.statusCode || 500);
+        next(error)
     }
 }
 
-export const getProfile = (req: CustomRequest, res: Response) => {
+export const verifyEmail = async (req:Request, res:Response, next:NextFunction) => {
+    const { token } = req.params;
+    try {
+        const user = await verifyEmailService(token);
+        res.status(200).send(user);
+    } catch (error) {
+        const customError = error as CustomError;
+        res.status(customError.statusCode || 500);
+        next(error)
+    }
+}
+
+export const getProfile = (req: CustomRequest, res: Response, next:NextFunction) => {
     if (req.user) {
-        res.status(200).send({
-            id: req.user._id,
-            username: req.user.username,
-            email: req.user.email,
-            profilePicture: req.user.profilePicture
-        })
+
+        const { _id, username, email, profilePicture } = req.user;
+        try {
+            res.status(200).send({
+                _id,
+                username,
+                email,
+                profilePicture,
+            });
+        } catch (error) {
+            const customError = error as CustomError;
+            res.status(customError.statusCode || 500);
+            next(error)
+        }
     } else {
         res.status(400).send("User Not Found")
     };

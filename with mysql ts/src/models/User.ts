@@ -8,6 +8,7 @@ export interface IUser {
     email: string;
     password: string;
     profilePicture: string;
+    isVerified: boolean;
 }
 
 class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> implements IUser {
@@ -16,6 +17,7 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> i
     declare email: string;
     declare password: string;
     declare profilePicture: string;
+    declare isVerified: CreationOptional<boolean>;
 
     async matchPassword(enteredPassword: string): Promise<boolean> {
         return await bcrypt.compare(enteredPassword, this.password);
@@ -48,6 +50,10 @@ User.init({
         type: DataTypes.STRING,
         allowNull: false
     },
+    isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    }
 }, {
     sequelize,
     modelName: "User",

@@ -1,6 +1,7 @@
 import { Sequelize } from "sequelize";
+import logger from "../utils/logger.js";
 
-export const sequelize = new Sequelize(process.env.DATABASE, process.env.USERNAME, process.env.PASSWORD, {
+export const sequelize = new Sequelize(process.env.DATABASE, process.env.DB_USERNAME, process.env.PASSWORD, {
     host: process.env.HOST,
     dialect: process.env.DIALECT,
     pool: {
@@ -15,13 +16,13 @@ export const sequelize = new Sequelize(process.env.DATABASE, process.env.USERNAM
 const connectDB = async () => {
     try {
         await sequelize.authenticate();
-        console.log("Connection has been established successfully");
+        logger.info("Connection has been established successfully");
 
         await sequelize.sync({ force: false });
-        console.log("Database synchronized successfully.");
+        logger.info("Database synchronized successfully.");
 
     } catch (error) {
-        console.error("MySql connection error:", error);
+        logger.error("MySql connection error:", error);
         process.exit(1)
     }
 }

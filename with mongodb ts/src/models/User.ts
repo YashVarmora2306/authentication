@@ -7,6 +7,7 @@ export interface IUser extends Document {
     email: string;
     password: string;
     profilePicture: string;
+    isVerified: boolean;
     matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -29,6 +30,10 @@ const userSchema = new mongoose.Schema<IUser>({
     profilePicture: {
         type: String,
         required: true
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
     }
 })
 
