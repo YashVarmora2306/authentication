@@ -28,3 +28,15 @@ export const loginUserValidator = [
         .notEmpty()
         .withMessage("Password is required"),
 ]
+
+export const resetPasswordValidator = [
+    body('password')
+        .notEmpty()
+        .withMessage("Password is required")
+        .isLength({ min: 6 })
+        .withMessage("Password must be at least 6 characters long")
+        .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*#?&])[0-9a-zA-Z@$!%*#?&]{6,}$/)
+        .withMessage(
+            "Password  must contain at least one uppercase letter, one lowercase letter, one special character and one digit"
+        )
+]

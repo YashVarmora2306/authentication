@@ -1,4 +1,4 @@
-import { registerUserService, loginUserService, verifyEmailService } from "../services/auth.js";
+import { registerUserService, loginUserService, verifyEmailService, forgotPasswordService, resetPasswordService } from "../services/auth.js";
 
 export const registerUser = async (req, res, next) => {
     const { username, email, password } = req.body;
@@ -33,6 +33,31 @@ export const verifyEmail = async (req, res, next) => {
         next(error)
     }
 }
+
+
+export const resetPassword = async (req, res, next) => {
+    const { id } = req.user;
+    const { password } = req.body;
+    try {
+        const user = await resetPasswordService(id, password);
+        res.status(200).send(user);
+    } catch (error) {
+        res.status(error.statusCode || 500);
+        next(error)
+    }
+}
+
+export const forgotPassword = async (req, res, next) => {
+    const { email } = req.body;
+    try {
+        const user = await forgotPasswordService(email);
+        res.status(200).send(user);
+    } catch (error) {
+        res.status(error.statusCode || 500);
+        next(error)
+    }
+}
+
 
 export const getProfile = (req, res, next) => {
     const { id, username, email, profilePicture } = req.user;

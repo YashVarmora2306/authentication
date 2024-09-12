@@ -2,6 +2,7 @@ import User from "../models/User";
 import { generateToken, handleUpload, sendMail } from "../helpers";
 import CustomError from "../utils/CustomError";
 import jwt from "jsonwebtoken";
+import { ObjectId } from "mongoose";
 
 interface RegisterUserServiceInput {
     username: string;
@@ -37,6 +38,22 @@ interface VerifyEmailServiceOutput {
 }
 interface JwtPayload {
     id: string;
+}
+
+interface ResetPasswordServiceInput {
+    userId: ObjectId;
+    newPassword: string;
+}
+
+interface ResetPasswordServiceOutput {
+    success: boolean;
+    message: string;
+}
+
+interface ForgotPasswordServiceOutput {
+    success: boolean;
+    resetUrl: string
+    message: string;
 }
 
 export const registerUserService = async ({ username, email, password, fileBuffer }: RegisterUserServiceInput): Promise<RegisterUserServiceOutput> => {
@@ -131,4 +148,39 @@ export const verifyEmailService = async (token: string): Promise<VerifyEmailServ
     } catch (error) {
         throw new CustomError("Invalid or expired Token", 400);
     }
+}
+
+export const resetPasswordService = async ({userId, newPassword}:ResetPasswordServiceInput):Promise<ResetPasswordServiceOutput> => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new CustomError("Invalid Token", 400);
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    await sendMail.sendPasswordChangeConfirmationEmail(user.username, user.email)
+
+    return ({
+        success: true,
+        message: "Password Changed Successfully",
+    });
+}
+
+
+export const forgotPasswordService = async (email:string):Promise<ForgotPasswordServiceOutput> => {
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new CustomError("Invalid Token", 400);
+    }
+
+    const resetToken = generateToken(user._id.toString());
+    await sendMail.sendForgotPasswordLinkEmail(user.username, email, resetToken);
+
+    return {
+        success: true,
+        resetUrl: `http://localhost:${process.env.PORT}/user/auth/resetPassword?token=${resetToken}`,
+        message: "Password reset link has been sent to your email."
+    };
+
 }

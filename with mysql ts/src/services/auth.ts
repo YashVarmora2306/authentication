@@ -39,6 +39,23 @@ interface JwtPayload {
     id: string;
 }
 
+interface ResetPasswordServiceInput {
+    userId: number;
+    newPassword: string;
+}
+
+interface ResetPasswordServiceOutput {
+    success: boolean;
+    message: string;
+}
+
+interface ForgotPasswordServiceOutput {
+    success: boolean;
+    resetUrl: string
+    message: string;
+}
+
+
 export const registerUserService = async ({ username, email, password, fileBuffer }: RegisterUserServiceInput): Promise<RegisterUserServiceOutput> => {
     const userExists = await User.findOne({ where: { email } });
     if (userExists && userExists.isVerified) throw new CustomError("User already exists", 400)
@@ -127,4 +144,39 @@ export const verifyEmailService = async (token: string): Promise<VerifyEmailServ
     } catch (error) {
         throw new CustomError("Invalid or expired Token", 400);
     }
+}
+
+export const resetPasswordService = async ({ userId, newPassword }: ResetPasswordServiceInput): Promise<ResetPasswordServiceOutput> => {
+    const user = await User.findByPk(userId);
+    if (!user) {
+        throw new CustomError("Invalid Token", 400);
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    await sendMail.sendPasswordChangeConfirmationEmail(user.username, user.email)
+
+    return ({
+        success: true,
+        message: "Password Changed Successfully",
+    });
+}
+
+
+export const forgotPasswordService = async (email: string): Promise<ForgotPasswordServiceOutput> => {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+        throw new CustomError("Invalid Token", 400);
+    }
+
+    const resetToken = generateToken(user.id.toString());
+    await sendMail.sendForgotPasswordLinkEmail(user.username, email, resetToken);
+
+    return {
+        success: true,
+        resetUrl: `http://localhost:${process.env.PORT}/user/auth/resetPassword?token=${resetToken}`,
+        message: "Password reset link has been sent to your email."
+    };
+
 }

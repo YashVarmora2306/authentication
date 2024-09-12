@@ -97,3 +97,38 @@ export const verifyEmailService = async (token) => {
         throw new CustomError("Invalid or expired Token", 400);
     }
 }
+
+
+export const resetPasswordService = async (userId, newPassword) => {
+   const user = await User.findByPk(userId);
+    if (!user) {
+        throw new CustomError("Invalid Token", 400);
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    await sendMail.sendPasswordChangeConfirmationEmail(user.username, user.email)
+
+    return ({
+        success: true,
+        message: "Password Changed Successfully",
+    });
+}
+
+export const forgotPasswordService = async (email) => {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+        throw new CustomError("Invalid Token", 400);
+    }
+
+    const resetToken = generateToken(user.id);
+    await sendMail.sendForgotPasswordLinkEmail(user.username, email, resetToken);
+
+    return {
+        success: true,
+        resetUrl: `http://localhost:${process.env.PORT}/user/auth/resetPassword?token=${resetToken}`,
+        message: "Password reset link has been sent to your email."
+    };
+
+}
